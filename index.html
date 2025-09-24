@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Cifrado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background-color: #000;
+            color: #0f0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::after {
+            content: "_";
+            animation: blink 1s infinite;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 24px;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #0f0, transparent);
+            animation: scan 3s linear infinite;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #0f0;
+            background-color: rgba(0, 20, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px #0f0;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #0a0;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #0f0;
+            background-color: rgba(0, 15, 0, 0.2);
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #0f0;
+            border-bottom: 1px dashed #0a0;
+            padding-bottom: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            background-color: #000;
+            color: #0f0;
+            border: 1px solid #0a0;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #0f0;
+            color: #000;
+            box-shadow: 0 0 10px #0f0;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(0, 10, 0, 0.5);
+            border: 1px dashed #0a0;
+            word-break: break-all;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .secret-pixel {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            width: 2px;
+            height: 2px;
+            background-color: #0f0;
+            cursor: pointer;
+            z-index: 100;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+        
+        .secret-pixel:hover {
+            opacity: 1;
+            box-shadow: 0 0 5px #0f0;
+        }
+        
+        .terminal-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 0, 0.03),
+                rgba(0, 255, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+        }
+        
+        .glitch {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch::before {
+            left: 2px;
+            text-shadow: -1px 0 red;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+        
+        .glitch::after {
+            left: -2px;
+            text-shadow: -1px 0 blue;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim2 5s infinite linear alternate-reverse;
+        }
+        
+        @keyframes glitch-anim {
+            0% { clip: rect(42px, 9999px, 44px, 0); }
+            5% { clip: rect(12px, 9999px, 59px, 0); }
+            10% { clip: rect(48px, 9999px, 29px, 0); }
+            15% { clip: rect(42px, 9999px, 73px, 0); }
+            20% { clip: rect(63px, 9999px, 27px, 0); }
+            25% { clip: rect(34px, 9999px, 55px, 0); }
+            30% { clip: rect(86px, 9999px, 73px, 0); }
+            35% { clip: rect(20px, 9999px, 20px, 0); }
+            40% { clip: rect(26px, 9999px, 60px, 0); }
+            45% { clip: rect(25px, 9999px, 66px, 0); }
+            50% { clip: rect(57px, 9999px, 98px, 0); }
+            55% { clip: rect(5px, 9999px, 46px, 0); }
+            60% { clip: rect(82px, 9999px, 31px, 0); }
+            65% { clip: rect(54px, 9999px, 27px, 0); }
+            70% { clip: rect(28px, 9999px, 99px, 0); }
+            75% { clip: rect(45px, 9999px, 69px, 0); }
+            80% { clip: rect(23px, 9999px, 85px, 0); }
+            85% { clip: rect(54px, 9999px, 84px, 0); }
+            90% { clip: rect(45px, 9999px, 47px, 0); }
+            95% { clip: rect(37px, 9999px, 20px, 0); }
+            100% { clip: rect(73px, 9999px, 99px, 0); }
+        }
+        
+        @keyframes glitch-anim2 {
+            0% { clip: rect(65px, 9999px, 100px, 0); }
+            5% { clip: rect(52px, 9999px, 74px, 0); }
+            10% { clip: rect(79px, 9999px, 85px, 0); }
+            15% { clip: rect(75px, 9999px, 5px, 0); }
+            20% { clip: rect(67px, 9999px, 61px, 0); }
+            25% { clip: rect(14px, 9999px, 79px, 0); }
+            30% { clip: rect(1px, 9999px, 66px, 0); }
+            35% { clip: rect(86px, 9999px, 30px, 0); }
+            40% { clip: rect(23px, 9999px, 98px, 0); }
+            45% { clip: rect(85px, 9999px, 72px, 0); }
+            50% { clip: rect(71px, 9999px, 75px, 0); }
+            55% { clip: rect(2px, 9999px, 48px, 0); }
+            60% { clip: rect(30px, 9999px, 16px, 0); }
+            65% { clip: rect(59px, 9999px, 50px, 0); }
+            70% { clip: rect(41px, 9999px, 62px, 0); }
+            75% { clip: rect(2px, 9999px, 82px, 0); }
+            80% { clip: rect(47px, 9999px, 73px, 0); }
+            85% { clip: rect(3px, 9999px, 27px, 0); }
+            90% { clip: rect(26px, 9999px, 55px, 0); }
+            95% { clip: rect(42px, 9999px, 97px, 0); }
+            100% { clip: rect(38px, 9999px, 49px, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-line"></div>
+    <div class="terminal-effect"></div>
+    
+    <div class="container">
+        <header>
+            <h1 class="glitch" data-text="SISTEMA DE CIFRADO">SISTEMA DE CIFRADO</h1>
+            <p class="subtitle">Protocolo de seguridad activado - Nivel de acceso: ALFA</p>
+        </header>
+        
+        <section class="section" id="encrypt-section">
+            <h2>CIFRADOR DE MENSAJES</h2>
+            <div class="form-group">
+                <label for="plaintext">MENSAJE A CIFRAR:</label>
+                <textarea id="plaintext" placeholder="Ingresa el mensaje secreto aquí..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="encrypt-key">CLAVE SECRETA:</label>
+                <input type="password" id="encrypt-key" placeholder="********">
+            </div>
+            <button id="encrypt-btn">EJECUTAR CIFRADO</button>
+            
+            <div class="result" id="encrypted-result">
+                <strong>MENSAJE CIFRADO:</strong>
+                <div id="encrypted-text"></div>
+            </div>
+        </section>
+        
+        <section class="section hidden" id="decrypt-section">
+            <h2>DESCIFRADOR DE MENSAJES</h2>
+            <div class="form-group">
+                <label for="ciphertext">MENSAJE CIFRADO:</label>
+                <textarea id="ciphertext" placeholder="Ingresa el mensaje cifrado aquí..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="decrypt-key">CLAVE SECRETA:</label>
+                <input type="password" id="decrypt-key" placeholder="********">
+            </div>
+            <button id="decrypt-btn">EJECUTAR DESCIFRADO</button>
+            
+            <div class="result" id="decrypted-result">
+                <strong>MENSAJE DESCIFRADO:</strong>
+                <div id="decrypted-text"></div>
+            </div>
+            
+            <button id="back-to-encrypt">VOLVER AL CIFRADOR</button>
+        </section>
+    </div>
+    
+    <div class="secret-pixel" id="secret-pixel" title=""></div>
+
+    <script>
+        function encrypt(text, key) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                result += String.fromCharCode(charCode);
+            }
+            return btoa(result); 
+        }
+
+        function decrypt(encryptedText, key) {
+            try {
+                const decodedText = atob(encryptedText);
+                let result = '';
+                for (let i = 0; i < decodedText.length; i++) {
+                    const charCode = decodedText.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                    result += String.fromCharCode(charCode);
+                }
+                return result;
+            } catch (e) {
+                return "ERROR: Mensaje o clave inválidos";
+            }
+        }
+
+        const encryptSection = document.getElementById('encrypt-section');
+        const decryptSection = document.getElementById('decrypt-section');
+        const encryptBtn = document.getElementById('encrypt-btn');
+        const decryptBtn = document.getElementById('decrypt-btn');
+        const backToEncryptBtn = document.getElementById('back-to-encrypt');
+        const secretPixel = document.getElementById('secret-pixel');
+        
+        encryptBtn.addEventListener('click', function() {
+            const plaintext = document.getElementById('plaintext').value;
+            const key = document.getElementById('encrypt-key').value;
+            
+            if (!plaintext || !key) {
+                alert("ERROR: Mensaje y clave requeridos");
+                return;
+            }
+            
+            const encrypted = encrypt(plaintext, key);
+            document.getElementById('encrypted-text').textContent = encrypted;
+            document.getElementById('encrypted-result').style.display = 'block';
+        });
+        
+        decryptBtn.addEventListener('click', function() {
+            const ciphertext = document.getElementById('ciphertext').value;
+            const key = document.getElementById('decrypt-key').value;
+            
+            if (!ciphertext || !key) {
+                alert("ERROR: Mensaje cifrado y clave requeridos");
+                return;
+            }
+            
+            const decrypted = decrypt(ciphertext, key);
+            document.getElementById('decrypted-text').textContent = decrypted;
+            document.getElementById('decrypted-result').style.display = 'block';
+        });
+        
+        secretPixel.addEventListener('click', function() {
+            encryptSection.classList.add('hidden');
+            decryptSection.classList.remove('hidden');
+        });
+        
+        backToEncryptBtn.addEventListener('click', function() {
+            decryptSection.classList.add('hidden');
+            encryptSection.classList.remove('hidden');
+        });
+        
+        const title = document.querySelector('h1');
+        const originalText = title.textContent;
+        title.textContent = '';
+        let i = 0;
+        
+        function typeWriter() {
+            if (i < originalText.length) {
+                title.textContent += originalText.charAt(i);
+                i++;
+                setTimeout(typeWriter, 100);
+            }
+        }
+        
+        setTimeout(typeWriter, 1000);
+        
+        const terminalEffect = document.querySelector('.terminal-effect');
+        setInterval(() => {
+            const randomChar = String.fromCharCode(0x30A0 + Math.random() * 96);
+            const span = document.createElement('span');
+            span.textContent = randomChar;
+            span.style.position = 'absolute';
+            span.style.left = Math.random() * 100 + 'vw';
+            span.style.top = Math.random() * 100 + 'vh';
+            span.style.color = 'rgba(0, 255, 0, ' + (Math.random() * 0.3) + ')';
+            span.style.fontSize = (Math.random() * 10 + 8) + 'px';
+            terminalEffect.appendChild(span);
+            
+            if (terminalEffect.children.length > 50) {
+                terminalEffect.removeChild(terminalEffect.children[0]);
+            }
+        }, 100);
+    </script>
+</body>
+</html>
